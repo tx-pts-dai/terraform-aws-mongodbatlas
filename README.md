@@ -41,7 +41,8 @@ locals {
 }
 
 module "mongodb" {
-  source = "."
+  source  = "tx-pts-dai/mongodbatlas/aws"
+  version = "v0.0.1"
 
   atlas_cidr_block      = "10.8.0.0/21"
   aws_region            = "eu-central-1"
