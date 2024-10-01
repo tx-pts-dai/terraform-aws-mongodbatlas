@@ -1,27 +1,30 @@
 variable "provider_name" {
-  type        = string
   description = "Provider name for Atlas Mongodb resources"
+  type        = string
+
+  default = "AWS"
 }
 
 variable "atlas_cidr_block" {
-  default     = "10.8.0.0/21"
-  description = " CIDR block for MongoDB resources "
+  description = "CIDR block for MongoDB resources"
   type        = string
+
+  default = "10.8.0.0/21"
 }
 
 variable "aws_region" {
+  description = "Region for AWS and for Mongodb resources"
   type        = string
-  description = "Region for AWS and for Mongodb resources "
 }
 
 variable "vpc_id" {
+  description = "VPC of Atlas MongoDB resources"
   type        = string
-  description = "VPC of Atlas MongoDB resources "
 }
 
 variable "vpc_public_ips" {
-  type        = list(string)
   description = "List of public IP addresses of the VPC"
+  type        = list(string)
 }
 
 variable "mongodb_atlas_org_id" {
@@ -29,23 +32,31 @@ variable "mongodb_atlas_org_id" {
   description = "ID of the Organization on Atlas"
 }
 
+variable "create_project" {
+  description = "Create a project on Atlas if set to True"
+  type        = bool
+
+  default = true
+}
+
 variable "project_name" {
-  type        = string
   description = "Name of the Mongodb project"
+  type        = string
 }
 
 variable "team_ids" {
+  description = "Id of the infra team of the Organization on Atlas"
   type = list(object({
     team_id   = string
     team_role = list(string)
   }))
-  default     = []
-  description = "Id of the infra team of the Organization on Atlas"
+
+  default = []
 }
 
 variable "private_subnets" {
-  type        = list(any)
-  description = "AWS private networks subnets which can connect to the db and which enable HA "
+  description = "AWS private subnet ids which can connect to the db and which enable HA"
+  type        = list(string)
 }
 
 variable "create_vpc_peering" {
@@ -54,7 +65,15 @@ variable "create_vpc_peering" {
 }
 
 variable "override_peering_cidr" {
-  type        = string
-  default     = null
   description = "Manually overrides the network peering cidr block"
+  type        = string
+
+  default = null
+}
+
+variable "create_privatelink" {
+  description = "Create a PrivateLink Connection if set to True for instances that are M10 size or higher"
+  type        = bool
+
+  default = false
 }
