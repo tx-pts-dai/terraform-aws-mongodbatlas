@@ -1,8 +1,35 @@
+variable "mongodb_atlas_org_id" {
+  type        = string
+  description = "ID of the Organization on Atlas"
+}
+
 variable "provider_name" {
   description = "Provider name for Atlas Mongodb resources"
   type        = string
 
   default = "AWS"
+}
+
+variable "create_project" {
+  description = "Create a project on Atlas if set to True"
+  type        = bool
+
+  default = true
+}
+
+variable "project_name" {
+  description = "Name of the Mongodb project"
+  type        = string
+}
+
+variable "team_ids" {
+  description = "Id of the infra team of the Organization on Atlas"
+  type = list(object({
+    team_id   = string
+    team_role = list(string)
+  }))
+
+  default = []
 }
 
 variable "atlas_cidr_block" {
@@ -25,31 +52,6 @@ variable "vpc_id" {
 variable "vpc_public_ips" {
   description = "List of public IP addresses of the VPC"
   type        = list(string)
-}
-
-variable "mongodb_atlas_org_id" {
-  type        = string
-  description = "ID of the Organization on Atlas"
-}
-
-variable "create_project" {
-  description = "Create a project on Atlas if set to True"
-  type        = bool
-
-  default = true
-}
-
-variable "project_name" {
-  description = "Name of the Mongodb project"
-  type        = string
-}
-
-variable "team_ids" {
-  description = "Id of the infra team of the Organization on Atlas"
-  type = list(object({
-    team_id   = string
-    team_role = list(string)
-  }))
 
   default = []
 }

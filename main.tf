@@ -4,6 +4,16 @@ data "aws_vpc" "this" {
   id = var.vpc_id
 }
 
+locals {
+  project_id = var.create_project ? mongodbatlas_project.project[0].id : data.mongodbatlas_project.this[0].id
+}
+
+data "mongodbatlas_project" "this" {
+  count = !var.create_project ? 1 : 0
+
+  name = var.project_name
+}
+
 resource "mongodbatlas_project" "project" {
   count = var.create_project ? 1 : 0
 
@@ -22,28 +32,28 @@ resource "mongodbatlas_project" "project" {
 resource "mongodbatlas_project_ip_access_list" "vpc" {
   count = var.create_vpc_peering ? 1 : 0
 
-  project_id = mongodbatlas_project.project[0].id
+  project_id = local.project_id
   cidr_block = data.aws_vpc.this.cidr_block
 }
 
 resource "mongodbatlas_project_ip_access_list" "additional_cidr" {
   count = var.override_peering_cidr != null ? 1 : 0
 
-  project_id = mongodbatlas_project.project[0].id
+  project_id = local.project_id
   cidr_block = var.override_peering_cidr
 }
 
 resource "mongodbatlas_project_ip_access_list" "public_ips" {
-  for_each = toset(var.create_vpc_peering ? [] : var.vpc_public_ips)
+  for_each = toset(var.create_vpc_peering && var.create_privatelink ? [] : var.vpc_public_ips)
 
-  project_id = mongodbatlas_project.project[0].id
+  project_id = local.project_id
   ip_address = each.value
 }
 
 resource "mongodbatlas_network_container" "container" {
   count = var.create_vpc_peering ? 1 : 0
 
-  project_id       = mongodbatlas_project.project[0].id
+  project_id       = local.project_id
   atlas_cidr_block = var.atlas_cidr_block
   provider_name    = var.provider_name
   region_name      = upper(replace(var.aws_region, "-", "_"))
@@ -95,8 +105,8 @@ resource "aws_vpc_endpoint" "this" {
 resource "mongodbatlas_privatelink_endpoint" "this" {
   count = var.create_privatelink ? 1 : 0
 
-  project_id    = mongodbatlas_project.project[0].id
-  provider_name = "AWS"
+  project_id    = local.project_id
+  provider_name = var.provider_name
   region        = var.aws_region
 }
 

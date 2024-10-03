@@ -4,7 +4,7 @@ output "peering_id" {
 }
 
 output "project_id" {
-  value       = mongodbatlas_project.project[0].id
+  value       = local.project_id
   description = "Mongodb project id"
 }
 
