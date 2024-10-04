@@ -4,11 +4,16 @@ output "peering_id" {
 }
 
 output "project_id" {
-  value       = mongodbatlas_project.project.id
+  value       = local.project_id
   description = "Mongodb project id"
 }
 
 output "region_name" {
   value       = upper(replace(var.aws_region, "-", "_"))
   description = "Mongodb region name"
+}
+
+output "private_link_endpoint" {
+  value       = var.create_privatelink == true ? aws_vpc_endpoint.this[0] : null
+  description = "Private link"
 }
