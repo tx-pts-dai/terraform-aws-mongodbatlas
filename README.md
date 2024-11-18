@@ -143,7 +143,7 @@ No modules.
 | <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | AWS private subnet ids which can connect to the db and which enable HA | `list(string)` | n/a | yes |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the Mongodb project | `string` | n/a | yes |
 | <a name="input_provider_name"></a> [provider\_name](#input\_provider\_name) | Provider name for Atlas Mongodb resources | `string` | `"AWS"` | no |
-| <a name="input_team_ids"></a> [team\_ids](#input\_team\_ids) | Id of the infra team of the Organization on Atlas | <pre>list(object({<br>    team_id   = string<br>    team_role = list(string)<br>  }))</pre> | `[]` | no |
+| <a name="input_team_ids"></a> [team\_ids](#input\_team\_ids) | Id of the infra team of the Organization on Atlas | <pre>list(object({<br/>    team_id   = string<br/>    team_role = list(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC of Atlas MongoDB resources | `string` | n/a | yes |
 | <a name="input_vpc_public_ips"></a> [vpc\_public\_ips](#input\_vpc\_public\_ips) | List of public IP addresses of the VPC | `list(string)` | `[]` | no |
 
