@@ -78,7 +78,7 @@ resource "aws_vpc_peering_connection_accepter" "atlas" {
   auto_accept               = true
 }
 
-data "aws_route_table" "private_routing_tables" {
+data "aws_route_tables" "private_routing_tables" {
   count = var.create_vpc_peering ? 1 : 0
 
   vpc_id = data.aws_vpc.this.id
@@ -90,9 +90,9 @@ data "aws_route_table" "private_routing_tables" {
 }
 
 resource "aws_route" "atlas_route" {
-  count = var.create_vpc_peering ? length(data.aws_route_table.private_routing_tables) : 0
+  count = var.create_vpc_peering ? length(data.aws_route_tables.private_routing_tables) : 0
 
-  route_table_id            = data.aws_route_table.private_routing_tables[count.index].id
+  route_table_id            = data.aws_route_tables.private_routing_tables[count.index].id
   destination_cidr_block    = data.aws_vpc.this.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection_accepter.atlas[0].id
 }
