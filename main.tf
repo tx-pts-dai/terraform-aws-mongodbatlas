@@ -44,10 +44,10 @@ resource "mongodbatlas_project_ip_access_list" "additional_cidr" {
 }
 
 resource "mongodbatlas_project_ip_access_list" "public_ips" {
-  for_each = toset(var.create_vpc_peering && var.create_privatelink ? [] : var.vpc_public_ips)
+  count = var.create_vpc_peering || var.create_privatelink ? 0 : length(var.vpc_public_ips)
 
   project_id = local.project_id
-  ip_address = each.value
+  ip_address = var.vpc_public_ips[count.index]
 }
 
 resource "mongodbatlas_network_container" "container" {
@@ -78,17 +78,22 @@ resource "aws_vpc_peering_connection_accepter" "atlas" {
   auto_accept               = true
 }
 
-data "aws_route_table" "private_routing_tables" {
-  for_each = toset(var.private_subnets)
+data "aws_route_tables" "private_routing_tables" {
+  count = var.create_vpc_peering ? 1 : 0
 
-  subnet_id = each.value
+  vpc_id = data.aws_vpc.this.id
+
+  filter {
+    name   = "association.subnet-id"
+    values = var.private_subnets
+  }
 }
 
 resource "aws_route" "atlas_route" {
-  for_each = toset([for o in data.aws_route_table.private_routing_tables : o.route_table_id if var.create_vpc_peering == true])
+  count = var.create_vpc_peering ? length(data.aws_route_tables.private_routing_tables) : 0
 
-  route_table_id            = each.value
-  destination_cidr_block    = var.atlas_cidr_block
+  route_table_id            = data.aws_route_tables.private_routing_tables[count.index].id
+  destination_cidr_block    = data.aws_vpc.this.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection_accepter.atlas[0].id
 }
 
