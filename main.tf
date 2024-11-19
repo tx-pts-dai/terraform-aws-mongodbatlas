@@ -93,7 +93,7 @@ resource "aws_route" "atlas_route" {
   count = var.create_vpc_peering ? length(data.aws_route_tables.private_routing_tables) : 0
 
   route_table_id            = data.aws_route_tables.private_routing_tables[count.index].id
-  destination_cidr_block    = data.aws_vpc.this.cidr_block
+  destination_cidr_block    = var.atlas_cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection_accepter.atlas[0].id
 }
 
