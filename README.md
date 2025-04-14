@@ -139,7 +139,7 @@ No modules.
 | <a name="input_create_privatelink"></a> [create\_privatelink](#input\_create\_privatelink) | Create a PrivateLink Connection if set to True for instances that are M10 size or higher | `bool` | `false` | no |
 | <a name="input_create_project"></a> [create\_project](#input\_create\_project) | Create a project on Atlas if set to True | `bool` | `true` | no |
 | <a name="input_create_vpc_peering"></a> [create\_vpc\_peering](#input\_create\_vpc\_peering) | Create a Vpc Peering Connection if set to True for instances that are M10 size or higher | `bool` | `false` | no |
-| <a name="input_ip_access_list"></a> [ip\_access\_list](#input\_ip\_access\_list) | List of Objects with public IP addresses of the VPC and comment | <pre>list(object({<br/>    ip      = string<br/>    comment = optional(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_ip_access_list"></a> [ip\_access\_list](#input\_ip\_access\_list) | List of Objects with public IP addresses of the VPC and comment | <pre>list(object({<br/>    ip      = string<br/>    comment = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_mongodb_atlas_org_id"></a> [mongodb\_atlas\_org\_id](#input\_mongodb\_atlas\_org\_id) | ID of the Organization on Atlas | `string` | n/a | yes |
 | <a name="input_override_peering_cidr"></a> [override\_peering\_cidr](#input\_override\_peering\_cidr) | Manually overrides the network peering cidr block | `string` | `null` | no |
 | <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | AWS private subnet ids which can connect to the db and which enable HA | `list(string)` | `[]` | no |
