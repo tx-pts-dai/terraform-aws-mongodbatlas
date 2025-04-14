@@ -63,7 +63,7 @@ variable "ip_access_list" {
   description = "List of Objects with public IP addresses of the VPC and comment"
   type = list(object({
     ip      = string
-    comment = optional(string)
+    comment = string
   }))
 
   default = []
