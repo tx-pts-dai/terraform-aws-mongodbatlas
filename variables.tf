@@ -48,10 +48,10 @@ variable "vpc_id" {
   description = "VPC of Atlas MongoDB resources"
   type        = string
 
-  default = ""
+  default = null
 }
 
-# To be removed on next MAJOR release
+# TODO: remove on next MAJOR release
 variable "vpc_public_ips" {
   description = "(Deprecated, use `ip_access_list` instead)\nList of public IP addresses of the VPC"
   type        = list(string)
@@ -60,7 +60,12 @@ variable "vpc_public_ips" {
 }
 
 variable "ip_access_list" {
-  description = "List of Objects with public IP addresses of the VPC and comment"
+  description = <<EOF
+    List of allowed IPs to the project
+
+    ip     : valid IP address, CIDR is not allowed
+    comment: useful information to identify the IP
+  EOF
   type = list(object({
     ip      = string
     comment = string

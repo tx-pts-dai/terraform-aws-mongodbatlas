@@ -8,6 +8,7 @@ data "aws_vpc" "this" {
 
 locals {
   project_id = var.create_project ? mongodbatlas_project.project[0].id : data.mongodbatlas_project.this[0].id
+  vpc_id     = var.create_vpc_peering ? data.aws_vpc.this[0].id : null
 }
 
 data "mongodbatlas_project" "this" {
@@ -45,7 +46,7 @@ resource "mongodbatlas_project_ip_access_list" "additional_cidr" {
   cidr_block = var.override_peering_cidr
 }
 
-# To be removed on next MAJOR release
+# TODO: remove on next MAJOR release
 resource "mongodbatlas_project_ip_access_list" "public_ips" {
   count = var.create_vpc_peering || var.create_privatelink ? 0 : length(var.vpc_public_ips)
 
@@ -57,13 +58,13 @@ resource "mongodbatlas_project_ip_access_list" "ips" {
   for_each = { for k, v in var.ip_access_list : v.ip => v }
 
   project_id = local.project_id
-  ip_address = replace(each.value.ip, "/32", "")
+  ip_address = each.value.ip
   comment    = each.value.comment
 
+  # TODO: remove on next MAJOR release
+  # Helps to support the migration to the new variable
+  # ensuring that conflicts do not happen
   depends_on = [
-    # Helps to support the migration to the new variable
-    # ensuring that conflicts do not happen
-    # Can be removed on next MAJOR release
     mongodbatlas_project_ip_access_list.public_ips
   ]
 }
@@ -85,7 +86,7 @@ resource "mongodbatlas_network_peering" "peering" {
   container_id           = mongodbatlas_network_container.container[0].container_id
   provider_name          = var.provider_name
   route_table_cidr_block = var.override_peering_cidr != null ? var.override_peering_cidr : data.aws_vpc.this[0].cidr_block
-  vpc_id                 = var.vpc_id
+  vpc_id                 = local.vpc_id
   aws_account_id         = data.aws_caller_identity.current.account_id
 }
 
@@ -99,7 +100,7 @@ resource "aws_vpc_peering_connection_accepter" "atlas" {
 data "aws_route_tables" "private_routing_tables" {
   count = var.create_vpc_peering ? 1 : 0
 
-  vpc_id = data.aws_vpc.this[0].id
+  vpc_id = local.vpc_id
 
   filter {
     name   = "association.subnet-id"
@@ -118,7 +119,7 @@ resource "aws_route" "atlas_route" {
 resource "aws_vpc_endpoint" "this" {
   count = var.create_privatelink ? 1 : 0
 
-  vpc_id             = data.aws_vpc.this[0].id
+  vpc_id             = local.vpc_id
   service_name       = mongodbatlas_privatelink_endpoint.this[0].endpoint_service_name
   vpc_endpoint_type  = "Interface"
   subnet_ids         = var.private_subnets
@@ -147,7 +148,7 @@ resource "aws_security_group" "this" {
 
   name_prefix = "mongodbatlas-privatelink"
   description = "Security group for MongoDB Atlas Private Link"
-  vpc_id      = data.aws_vpc.this[0].id
+  vpc_id      = local.vpc_id
 
   ingress {
     from_port = 0

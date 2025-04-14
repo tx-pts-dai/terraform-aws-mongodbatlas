@@ -36,8 +36,15 @@ locals {
   # AWS VPC ID
   vpc_idf = "vpc-17_hexchar"
 
+  # Deprecated use `ip_access_list` instead
   # List of AWS NAT Gateway public IPs
   vpc_public_ips = ["1.1.1.1", "1.2.2.1", "..."]
+
+  # List of objects with IP and Comment
+  ip_access_list = [
+    { ip = "1.1.1.1", comment = "tx-office-a" },
+    { ip = "1.2.1.1", comment = "tx-office-b" },
+  ]
 }
 
 module "mongodb" {
@@ -55,6 +62,7 @@ module "mongodb" {
   team_ids              = local.teams_ids
   vpc_id                = local.vpc_id
   vpc_public_ips        = local.vpc_public_ips
+  ip_access_list        = local.ip_access_list
 }
 ```
 
