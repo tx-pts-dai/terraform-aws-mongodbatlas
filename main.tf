@@ -63,7 +63,7 @@ resource "mongodbatlas_project_ip_access_list" "ips" {
   depends_on = [
     # Helps to support the migration to the new variable
     # ensuring that conflicts do not happen
-    # Can be removed
+    # Can be removed on next MAJOR release
     mongodbatlas_project_ip_access_list.public_ips
   ]
 }
