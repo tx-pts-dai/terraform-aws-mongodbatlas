@@ -47,11 +47,29 @@ variable "aws_region" {
 variable "vpc_id" {
   description = "VPC of Atlas MongoDB resources"
   type        = string
+
+  default = null
 }
 
+# TODO: remove on next MAJOR release
 variable "vpc_public_ips" {
-  description = "List of public IP addresses of the VPC"
+  description = "(Deprecated, use `ip_access_list` instead)\nList of public IP addresses of the VPC"
   type        = list(string)
+
+  default = []
+}
+
+variable "ip_access_list" {
+  description = <<EOF
+    List of allowed IPs to the project
+
+    ip     : valid IP address, CIDR is not allowed
+    comment: useful information to identify the IP
+  EOF
+  type = list(object({
+    ip      = string
+    comment = string
+  }))
 
   default = []
 }
@@ -59,11 +77,15 @@ variable "vpc_public_ips" {
 variable "private_subnets" {
   description = "AWS private subnet ids which can connect to the db and which enable HA"
   type        = list(string)
+
+  default = []
 }
 
 variable "create_vpc_peering" {
   type        = bool
   description = "Create a Vpc Peering Connection if set to True for instances that are M10 size or higher"
+
+  default = false
 }
 
 variable "override_peering_cidr" {

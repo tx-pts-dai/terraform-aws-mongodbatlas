@@ -36,8 +36,15 @@ locals {
   # AWS VPC ID
   vpc_idf = "vpc-17_hexchar"
 
+  # Deprecated use `ip_access_list` instead
   # List of AWS NAT Gateway public IPs
   vpc_public_ips = ["1.1.1.1", "1.2.2.1", "..."]
+
+  # List of objects with IP and Comment
+  ip_access_list = [
+    { ip = "1.1.1.1", comment = "tx-office-a" },
+    { ip = "1.2.1.1", comment = "tx-office-b" },
+  ]
 }
 
 module "mongodb" {
@@ -55,6 +62,7 @@ module "mongodb" {
   team_ids              = local.teams_ids
   vpc_id                = local.vpc_id
   vpc_public_ips        = local.vpc_public_ips
+  ip_access_list        = local.ip_access_list
 }
 ```
 
@@ -122,6 +130,7 @@ No modules.
 | [mongodbatlas_privatelink_endpoint_service.this](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/privatelink_endpoint_service) | resource |
 | [mongodbatlas_project.project](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project) | resource |
 | [mongodbatlas_project_ip_access_list.additional_cidr](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
+| [mongodbatlas_project_ip_access_list.ips](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
 | [mongodbatlas_project_ip_access_list.public_ips](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
 | [mongodbatlas_project_ip_access_list.vpc](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
@@ -137,15 +146,16 @@ No modules.
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | Region for AWS and for Mongodb resources | `string` | n/a | yes |
 | <a name="input_create_privatelink"></a> [create\_privatelink](#input\_create\_privatelink) | Create a PrivateLink Connection if set to True for instances that are M10 size or higher | `bool` | `false` | no |
 | <a name="input_create_project"></a> [create\_project](#input\_create\_project) | Create a project on Atlas if set to True | `bool` | `true` | no |
-| <a name="input_create_vpc_peering"></a> [create\_vpc\_peering](#input\_create\_vpc\_peering) | Create a Vpc Peering Connection if set to True for instances that are M10 size or higher | `bool` | n/a | yes |
+| <a name="input_create_vpc_peering"></a> [create\_vpc\_peering](#input\_create\_vpc\_peering) | Create a Vpc Peering Connection if set to True for instances that are M10 size or higher | `bool` | `false` | no |
+| <a name="input_ip_access_list"></a> [ip\_access\_list](#input\_ip\_access\_list) | List of allowed IPs to the project<br/><br/>    ip     : valid IP address, CIDR is not allowed<br/>    comment: useful information to identify the IP | <pre>list(object({<br/>    ip      = string<br/>    comment = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_mongodb_atlas_org_id"></a> [mongodb\_atlas\_org\_id](#input\_mongodb\_atlas\_org\_id) | ID of the Organization on Atlas | `string` | n/a | yes |
 | <a name="input_override_peering_cidr"></a> [override\_peering\_cidr](#input\_override\_peering\_cidr) | Manually overrides the network peering cidr block | `string` | `null` | no |
-| <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | AWS private subnet ids which can connect to the db and which enable HA | `list(string)` | n/a | yes |
+| <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | AWS private subnet ids which can connect to the db and which enable HA | `list(string)` | `[]` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the Mongodb project | `string` | n/a | yes |
 | <a name="input_provider_name"></a> [provider\_name](#input\_provider\_name) | Provider name for Atlas Mongodb resources | `string` | `"AWS"` | no |
 | <a name="input_team_ids"></a> [team\_ids](#input\_team\_ids) | Id of the infra team of the Organization on Atlas | <pre>list(object({<br/>    team_id   = string<br/>    team_role = list(string)<br/>  }))</pre> | `[]` | no |
-| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC of Atlas MongoDB resources | `string` | n/a | yes |
-| <a name="input_vpc_public_ips"></a> [vpc\_public\_ips](#input\_vpc\_public\_ips) | List of public IP addresses of the VPC | `list(string)` | `[]` | no |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC of Atlas MongoDB resources | `string` | `null` | no |
+| <a name="input_vpc_public_ips"></a> [vpc\_public\_ips](#input\_vpc\_public\_ips) | (Deprecated, use `ip_access_list` instead)<br/>List of public IP addresses of the VPC | `list(string)` | `[]` | no |
 
 ## Outputs
 
