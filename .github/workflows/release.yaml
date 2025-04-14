@@ -14,4 +14,5 @@ permissions:
 jobs:
   release:
     uses: tx-pts-dai/github-workflows/.github/workflows/gh-release-on-main.yaml@v2
-    update_version_aliases: false
+    with:
+      update_version_aliases: false
