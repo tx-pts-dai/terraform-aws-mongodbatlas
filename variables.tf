@@ -63,7 +63,7 @@ variable "ip_access_list" {
   description = <<EOF
     List of allowed IPs to the project
 
-    ip     : valid IP address, CIDR is not allowed
+    ip     : can be either an IP address or CIDR block
     comment: useful information to identify the IP
   EOF
   type = list(object({

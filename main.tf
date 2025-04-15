@@ -58,8 +58,11 @@ resource "mongodbatlas_project_ip_access_list" "ips" {
   for_each = { for k, v in var.ip_access_list : v.ip => v }
 
   project_id = local.project_id
-  ip_address = each.value.ip
-  comment    = each.value.comment
+
+  ip_address = can(regex(".*/", each.value.ip)) ? null : each.value.ip
+  cidr_block = can(regex(".*/", each.value.ip)) ? each.value.ip : null
+
+  comment = each.value.comment
 
   # TODO: remove on next MAJOR release
   # Helps to support the migration to the new variable
