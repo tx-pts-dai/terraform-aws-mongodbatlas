@@ -59,8 +59,8 @@ resource "mongodbatlas_project_ip_access_list" "ips" {
 
   project_id = local.project_id
 
-  ip_address = strcontains(each.value.ip, "/") ? null : each.value.ip
-  cidr_block = strcontains(each.value.ip, "/") ? each.value.ip : null
+  ip_address = can(regex(".*/", each.value.ip)) ? null : each.value.ip
+  cidr_block = can(regex(".*/", each.value.ip)) ? each.value.ip : null
 
   comment = each.value.comment
 
