@@ -1,14 +1,14 @@
 data "aws_caller_identity" "current" {}
 
 data "aws_vpc" "this" {
-  count = var.create_vpc_peering ? 1 : 0
+  count = var.create_vpc_peering || var.create_privatelink ? 1 : 0
 
   id = var.vpc_id
 }
 
 locals {
   project_id = var.create_project ? mongodbatlas_project.project[0].id : data.mongodbatlas_project.this[0].id
-  vpc_id     = var.create_vpc_peering ? data.aws_vpc.this[0].id : null
+  vpc_id     = var.create_vpc_peering || var.create_privatelink ? data.aws_vpc.this[0].id : null
 }
 
 data "mongodbatlas_project" "this" {
@@ -141,7 +141,7 @@ resource "mongodbatlas_privatelink_endpoint_service" "this" {
   count = var.create_privatelink ? 1 : 0
 
   project_id          = mongodbatlas_privatelink_endpoint.this[0].project_id
-  private_link_id     = mongodbatlas_privatelink_endpoint.this[0].id
+  private_link_id     = mongodbatlas_privatelink_endpoint.this[0].private_link_id
   endpoint_service_id = aws_vpc_endpoint.this[0].id
   provider_name       = "AWS"
 }
