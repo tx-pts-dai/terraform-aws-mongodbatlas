@@ -51,14 +51,6 @@ variable "vpc_id" {
   default = null
 }
 
-# TODO: remove on next MAJOR release
-variable "vpc_public_ips" {
-  description = "(Deprecated, use `ip_access_list` instead)\nList of public IP addresses of the VPC"
-  type        = list(string)
-
-  default = []
-}
-
 variable "ip_access_list" {
   description = <<EOF
     List of allowed IPs to the project

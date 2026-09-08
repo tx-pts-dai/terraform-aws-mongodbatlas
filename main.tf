@@ -46,14 +46,6 @@ resource "mongodbatlas_project_ip_access_list" "additional_cidr" {
   cidr_block = var.override_peering_cidr
 }
 
-# TODO: remove on next MAJOR release
-resource "mongodbatlas_project_ip_access_list" "public_ips" {
-  count = var.create_vpc_peering || var.create_privatelink ? 0 : length(var.vpc_public_ips)
-
-  project_id = local.project_id
-  ip_address = var.vpc_public_ips[count.index]
-}
-
 resource "mongodbatlas_project_ip_access_list" "ips" {
   for_each = { for k, v in var.ip_access_list : v.ip => v }
 
@@ -63,13 +55,6 @@ resource "mongodbatlas_project_ip_access_list" "ips" {
   cidr_block = can(regex(".*/", each.value.ip)) ? each.value.ip : null
 
   comment = each.value.comment
-
-  # TODO: remove on next MAJOR release
-  # Helps to support the migration to the new variable
-  # ensuring that conflicts do not happen
-  depends_on = [
-    mongodbatlas_project_ip_access_list.public_ips
-  ]
 }
 
 resource "mongodbatlas_network_container" "container" {
@@ -111,10 +96,12 @@ data "aws_route_tables" "private_routing_tables" {
   }
 }
 
+# Keyed by route table id: the order of `aws_route_tables.ids` follows the AWS API response and
+# is not stable, so positional addressing recreates unrelated routes when it shifts.
 resource "aws_route" "atlas_route" {
-  count = var.create_vpc_peering ? length(data.aws_route_tables.private_routing_tables[0].ids) : 0
+  for_each = toset(flatten(data.aws_route_tables.private_routing_tables[*].ids))
 
-  route_table_id            = data.aws_route_tables.private_routing_tables[0].ids[count.index]
+  route_table_id            = each.value
   destination_cidr_block    = var.atlas_cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection_accepter.atlas[0].id
 }

@@ -36,11 +36,8 @@ locals {
   # AWS VPC ID
   vpc_idf = "vpc-17_hexchar"
 
-  # Deprecated use `ip_access_list` instead
-  # List of AWS NAT Gateway public IPs
-  vpc_public_ips = ["1.1.1.1", "1.2.2.1", "..."]
-
   # List of objects with IP and Comment
+  # Accepts single IPs and CIDR blocks, e.g. AWS NAT Gateway public IPs
   ip_access_list = [
     { ip = "1.1.1.1", comment = "tx-office-a" },
     { ip = "1.2.1.1", comment = "tx-office-b" },
@@ -61,7 +58,6 @@ module "mongodb" {
   provider_name         = "AWS"
   team_ids              = local.teams_ids
   vpc_id                = local.vpc_id
-  vpc_public_ips        = local.vpc_public_ips
   ip_access_list        = local.ip_access_list
 }
 ```
@@ -74,6 +70,40 @@ Will manage the following resources:
 - MongoDB Atlas Network Peering
 - AWS VPC Peering Accepter
 - AWS Route
+
+## Upgrading to v3
+
+`v3.0.0` removes the deprecated `vpc_public_ips` variable and restores route addressing by route
+table id. Both changes are handled by `moved` blocks or need none, so the upgrade can be a no-op
+plan -- **always confirm the plan reports no changes before applying**.
+
+### From v1.x
+
+1. Move the values of `vpc_public_ips` into `ip_access_list`, keeping `comment` empty so the
+   entries are not replaced (the Atlas API cannot update an access list entry in place, so any
+   change to `comment` destroys and recreates it):
+
+   ```HCL
+   ip_access_list = [for ip in local.vpc_public_ips : { ip = ip, comment = "" }]
+   ```
+
+   The shipped `moved` block re-keys the existing state entries, since both the old and the new
+   resource are keyed by the IP itself.
+
+2. Nothing to do for `aws_route.atlas_route`: `v3.0.0` uses the same route table id keys as `v1.x`.
+
+### From v2.x
+
+1. Same `ip_access_list` step as above. One exception: if you used `vpc_public_ips` with both
+   `create_vpc_peering` and `create_privatelink` set to `false`, your state entries are keyed by
+   list position and cannot be re-keyed automatically -- they are destroyed and recreated.
+2. `aws_route.atlas_route` state entries are keyed by list position and are destroyed and
+   recreated once. This briefly removes the route to `atlas_cidr_block`, so apply in a maintenance
+   window, or re-key them up front:
+
+   ```sh
+   terraform state mv 'module.<name>.aws_route.atlas_route[0]' 'module.<name>.aws_route.atlas_route["rtb-abc123"]'
+   ```
 
 ## Contributing
 
@@ -100,7 +130,7 @@ as described in the `.pre-commit-config.yaml` file
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.1 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0 |
 | <a name="requirement_mongodbatlas"></a> [mongodbatlas](#requirement\_mongodbatlas) | >= 1.0 |
@@ -108,7 +138,7 @@ as described in the `.pre-commit-config.yaml` file
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0 |
 | <a name="provider_mongodbatlas"></a> [mongodbatlas](#provider\_mongodbatlas) | >= 1.0 |
 
@@ -119,7 +149,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_route.atlas_route](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_security_group.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_vpc_endpoint.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
@@ -131,7 +161,6 @@ No modules.
 | [mongodbatlas_project.project](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project) | resource |
 | [mongodbatlas_project_ip_access_list.additional_cidr](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
 | [mongodbatlas_project_ip_access_list.ips](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
-| [mongodbatlas_project_ip_access_list.public_ips](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
 | [mongodbatlas_project_ip_access_list.vpc](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/project_ip_access_list) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_route_tables.private_routing_tables](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/route_tables) | data source |
@@ -141,7 +170,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_atlas_cidr_block"></a> [atlas\_cidr\_block](#input\_atlas\_cidr\_block) | CIDR block for MongoDB resources | `string` | `"10.8.0.0/21"` | no |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | Region for AWS and for Mongodb resources | `string` | n/a | yes |
 | <a name="input_create_privatelink"></a> [create\_privatelink](#input\_create\_privatelink) | Create a PrivateLink Connection if set to True for instances that are M10 size or higher | `bool` | `false` | no |
@@ -155,12 +184,11 @@ No modules.
 | <a name="input_provider_name"></a> [provider\_name](#input\_provider\_name) | Provider name for Atlas Mongodb resources | `string` | `"AWS"` | no |
 | <a name="input_team_ids"></a> [team\_ids](#input\_team\_ids) | Id of the infra team of the Organization on Atlas | <pre>list(object({<br/>    team_id   = string<br/>    team_role = list(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | VPC of Atlas MongoDB resources | `string` | `null` | no |
-| <a name="input_vpc_public_ips"></a> [vpc\_public\_ips](#input\_vpc\_public\_ips) | (Deprecated, use `ip_access_list` instead)<br/>List of public IP addresses of the VPC | `list(string)` | `[]` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_peering_id"></a> [peering\_id](#output\_peering\_id) | Network peering |
 | <a name="output_private_link_endpoint"></a> [private\_link\_endpoint](#output\_private\_link\_endpoint) | Private link |
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | Mongodb project id |
